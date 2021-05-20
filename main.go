@@ -75,10 +75,10 @@ func CreateToken(userid uint64) (*TokenDetails, error) {
 	td.RefreshUuid = uuid.NewV4().String()
 	var err error
 	// Creating Access Token
-	println(JWTAccessSecret)
+	// println(JWTAccessSecret)
 	atClaims := jwt.MapClaims{}
 	atClaims["authorized"] = true
-	atClaims["access_uuid"] = td.AccessToken
+	atClaims["access_uuid"] = td.AccessUuid
 	atClaims["user_id"] = userid
 	atClaims["exp"] = td.AtExpires
 	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
@@ -213,7 +213,6 @@ func FetchAuth(authD *AccessDetails) (uint64, error) {
 		return 0, err
 	}
 	userID, _ := strconv.ParseUint(userid, 10, 64)
-	fmt.Println("userID", userID)
 	return userID, nil
 }
 
@@ -221,23 +220,18 @@ func CreateTodo(c *gin.Context) {
 	var td *Todo
 	if err := c.ShouldBindJSON(&td); err != nil {
 		c.JSON(http.StatusUnprocessableEntity, "invalid json")
-		fmt.Println("err", err)
 		return
 	}
 	tokenAuth, err := ExtractTokenMetadata(c.Request)
-	fmt.Println("tokenAuth", tokenAuth)
 	if err != nil {
-		fmt.Println("err", err)
 		c.JSON(http.StatusUnauthorized, "unauthorized")
 		return
 	}
 	userId, err := FetchAuth(tokenAuth)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, "unauthorized")
-		fmt.Println("err", err)
 		return
 	}
-	fmt.Println(userId)
 	td.UserID = userId
 	c.JSON(http.StatusCreated, td)
 }
@@ -245,19 +239,25 @@ func CreateTodo(c *gin.Context) {
 func DeleteAuth(givenUuid string) (int64, error) {
 	deleted, err := client.Del(givenUuid).Result()
 	if err != nil {
+		fmt.Println("err return 0", err)
 		return 0, err
 	}
+	fmt.Println("deleted", deleted)
 	return deleted, nil
 }
 
 func Logout(c *gin.Context) {
 	au, err := ExtractTokenMetadata(c.Request)
 	if err != nil {
+		fmt.Println("err about to return unauthorized Logout")
 		c.JSON(http.StatusUnauthorized, "unauthorized")
 		return
 	}
+	fmt.Println("further down in Logout")
+	fmt.Println("au.AccessUuid", au.AccessUuid)
 	deleted, delErr := DeleteAuth(au.AccessUuid)
 	if delErr != nil || deleted == 0 {
+		fmt.Println("delErr != nil || deleted ==0")
 		c.JSON(http.StatusUnauthorized, "unauthorized")
 		return
 	}

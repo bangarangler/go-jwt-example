@@ -13,7 +13,7 @@ echo $(cat /Users/jonathanpalacio/Desktop/go-jwt-example/curl/token.txt)
 curl http://localhost:8080/todo \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $(cat /Users/jonathanpalacio/Desktop/go-jwt-example/curl/token.txt)" \
-  -d  "{\"title\": \"my first todo\"}" \
+  -d  "{\"title\": \"my second todo\"}" \
       -X POST \
       -v | jq
 
